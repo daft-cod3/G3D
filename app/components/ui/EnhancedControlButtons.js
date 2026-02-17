@@ -9,6 +9,9 @@ export default function EnhancedControlButtons({ onControlChange }) {
     left: false,
     right: false,
     brake: false,
+    handbrake: false,
+    boost: false,
+    reset: false,
   });
 
   const handleControlStart = (control) => {
@@ -155,6 +158,39 @@ export default function EnhancedControlButtons({ onControlChange }) {
         </button>
       </div>
       
+      {/* Extras: Handbrake/Boost/Reset */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
+        <button
+          style={buttonStyle(activeControls.handbrake)}
+          onMouseDown={() => handleControlStart('handbrake')}
+          onMouseUp={() => handleControlEnd('handbrake')}
+          onMouseLeave={() => handleControlEnd('handbrake')}
+          onTouchStart={(e) => { e.preventDefault(); handleControlStart('handbrake'); }}
+          onTouchEnd={(e) => { e.preventDefault(); handleControlEnd('handbrake'); }}
+        >
+          H
+        </button>
+        <button
+          style={buttonStyle(activeControls.boost)}
+          onMouseDown={() => handleControlStart('boost')}
+          onMouseUp={() => handleControlEnd('boost')}
+          onMouseLeave={() => handleControlEnd('boost')}
+          onTouchStart={(e) => { e.preventDefault(); handleControlStart('boost'); }}
+          onTouchEnd={(e) => { e.preventDefault(); handleControlEnd('boost'); }}
+        >
+          B
+        </button>
+        <button
+          style={buttonStyle(activeControls.reset)}
+          onMouseDown={() => handleControlStart('reset')}
+          onMouseUp={() => handleControlEnd('reset')}
+          onMouseLeave={() => handleControlEnd('reset')}
+          onTouchStart={(e) => { e.preventDefault(); handleControlStart('reset'); }}
+          onTouchEnd={(e) => { e.preventDefault(); handleControlEnd('reset'); }}
+        >
+          R
+        </button>
+      </div>
       {/* Backward */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <button

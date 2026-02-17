@@ -9,7 +9,8 @@ export default function AIVehicle({
   route = [] 
 }) {
   const groupRef = useRef();
-  const speed = useRef(2.5);
+  const speed = useRef(2.0 + Math.random() * 1.5);
+  const targetSpeed = useRef(speed.current);
   const currentWaypoint = useRef(0);
 
   useFrame((state, delta) => {
@@ -22,10 +23,13 @@ export default function AIVehicle({
     const dz = target[1] - pos.z;
     const distance = Math.sqrt(dx * dx + dz * dz);
     
-    if (distance < 1) {
+    if (distance < 1.5) {
       currentWaypoint.current = (currentWaypoint.current + 1) % route.length;
+      targetSpeed.current = 1.5 + Math.random() * 2.0;
       return;
     }
+
+    speed.current += (targetSpeed.current - speed.current) * 2.0 * delta;
     
     const dirX = dx / distance;
     const dirZ = dz / distance;

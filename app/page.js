@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Scene from './components/3D/scene';
+import Scene from './components/3D/scene2';
 import EnhancedDashboard from './components/ui/EnhancedDashboard';
 import EnhancedControlButtons from './components/ui/EnhancedControlButtons';
 import EnhancedCameraRotationControls from './components/ui/EnhancedCameraRotationControls';
@@ -23,7 +23,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Google Fonts */}
       <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet"

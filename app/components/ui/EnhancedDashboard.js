@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useVehicleSpeed, useVehicleGear } from '../3D/cameraController';
 
 export default function EnhancedDashboard({ vehicleStats = {} }) {
   const [cameraMode, setCameraMode] = useState('follow');
-  const [speed, setSpeed] = useState(0);
-  const [gear, setGear] = useState('P');
+  const contextSpeed = useVehicleSpeed();
+  const contextGear = useVehicleGear();
+  const [speed, setSpeed] = useState(contextSpeed);
+  const [gear, setGear] = useState(contextGear);
   const [distance, setDistance] = useState(0);
   const [time, setTime] = useState(0);
 
@@ -19,6 +22,15 @@ export default function EnhancedDashboard({ vehicleStats = {} }) {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
+
+  // sync with context values
+  useEffect(() => {
+    setSpeed(Math.round(Math.abs(contextSpeed) * 3.6 * 10) / 10);
+  }, [contextSpeed]);
+
+  useEffect(() => {
+    setGear(contextGear.toString());
+  }, [contextGear]);
 
   useEffect(() => {
     const timer = setInterval(() => {

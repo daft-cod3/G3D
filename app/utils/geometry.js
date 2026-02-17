@@ -1,21 +1,15 @@
-// Enhanced road layout coordinates for the comprehensive model town
 export const roadLayout = {
   roads: [
-    // Main horizontal roads
-    { start: [-45, 0, 25], end: [45, 0, 25], width: 8, type: 'main' },
-    { start: [-45, 0, 0], end: [45, 0, 0], width: 8, type: 'main' },
-    { start: [-45, 0, -25], end: [45, 0, -25], width: 8, type: 'main' },
+    { start: [-60, 0, 5], end: [60, 0, 5], width: 8, type: 'oneway', direction: 'east' },
+    { start: [-60, 0, -5], end: [60, 0, -5], width: 8, type: 'oneway', direction: 'west' },
     
-    // Main vertical roads
-    { start: [-25, 0, -40], end: [-25, 0, 40], width: 8, type: 'main' },
-    { start: [0, 0, -40], end: [0, 0, 40], width: 8, type: 'main' },
-    { start: [25, 0, -40], end: [25, 0, 40], width: 8, type: 'main' },
-    
-    // Secondary roads
-    { start: [-35, 0, 12.5], end: [-35, 0, -12.5], width: 6, type: 'secondary' },
-    { start: [35, 0, 12.5], end: [35, 0, -12.5], width: 6, type: 'secondary' },
-    { start: [-12.5, 0, 35], end: [12.5, 0, 35], width: 6, type: 'secondary' },
-    { start: [-12.5, 0, -35], end: [12.5, 0, -35], width: 6, type: 'secondary' },
+    { start: [30, 0, -60], end: [30, 0, 60], width: 12, type: 'twoway' },
+  ],
+
+  highway: null,
+
+  roundabouts: [
+    { center: [30, 0, 0], radius: 12, width: 16 }
   ],
   
   parkingLots: [
@@ -30,25 +24,21 @@ export const roadLayout = {
   ],
   
   buildings: [
-    // Residential buildings
     { position: [-40, 2, 15], size: [8, 4, 8], color: '#8B4513', type: 'residential' },
     { position: [-40, 3, -15], size: [8, 6, 8], color: '#CD853F', type: 'residential' },
     { position: [40, 2.5, 15], size: [8, 5, 8], color: '#A0522D', type: 'residential' },
     { position: [40, 2, -15], size: [8, 4, 8], color: '#8B4513', type: 'residential' },
     
-    // Commercial buildings
     { position: [-7, 4, 30], size: [12, 8, 6], color: '#4682B4', type: 'commercial' },
     { position: [7, 4, 30], size: [12, 8, 6], color: '#5F9EA0', type: 'commercial' },
     { position: [-7, 4, -30], size: [12, 8, 6], color: '#4682B4', type: 'commercial' },
     { position: [7, 4, -30], size: [12, 8, 6], color: '#5F9EA0', type: 'commercial' },
     
-    // Office buildings
     { position: [-30, 6, 7], size: [6, 12, 10], color: '#708090', type: 'office' },
     { position: [30, 6, 7], size: [6, 12, 10], color: '#778899', type: 'office' },
     { position: [-30, 6, -7], size: [6, 12, 10], color: '#708090', type: 'office' },
     { position: [30, 6, -7], size: [6, 12, 10], color: '#778899', type: 'office' },
     
-    // Small shops
     { position: [-20, 1.5, 20], size: [4, 3, 4], color: '#FF6347', type: 'shop' },
     { position: [20, 1.5, 20], size: [4, 3, 4], color: '#FF7F50', type: 'shop' },
     { position: [-20, 1.5, -20], size: [4, 3, 4], color: '#FF6347', type: 'shop' },
@@ -74,12 +64,10 @@ export function createRoadGeometry(road) {
   };
 }
 
-// Check if position is on a road
 export function isOnRoad(position) {
   return roadLayout.roads.some(road => {
     const { start, end, width } = road;
     
-    // Check if point is within road bounds
     const minX = Math.min(start[0], end[0]) - width / 2;
     const maxX = Math.max(start[0], end[0]) + width / 2;
     const minZ = Math.min(start[2], end[2]) - width / 2;
@@ -87,10 +75,25 @@ export function isOnRoad(position) {
     
     return position[0] >= minX && position[0] <= maxX && 
            position[2] >= minZ && position[2] <= maxZ;
-  });
+  }) || isOnHighway(position);
 }
 
-// Check if position is in a parking lot
+export function isOnHighway(position) {
+  const hw = roadLayout.highway;
+  if (!hw) return false;
+  const halfLen = hw.length / 2;
+  const halfW = hw.width / 2;
+
+  const localX = position[0] - hw.position[0];
+  const localZ = position[2] - hw.position[2];
+
+  if (hw.direction === 'east' || hw.direction === 'west') {
+    return localX >= -halfLen && localX <= halfLen && Math.abs(localZ) <= halfW;
+  } else {
+    return localZ >= -halfLen && localZ <= halfLen && Math.abs(localX) <= halfW;
+  }
+}
+
 export function isInParkingLot(position) {
   return roadLayout.parkingLots.some(lot => {
     const halfWidth = lot.size[0] / 2;
@@ -103,38 +106,120 @@ export function isInParkingLot(position) {
   });
 }
 
-// Check if position is valid for vehicle movement
-export function isValidPosition(position) {
-  return isOnRoad(position) || isInParkingLot(position);
+
+export function isOnRoundabout(position) {
+  return (roadLayout.roundabouts || []).some(rb => {
+    const dx = position[0] - rb.center[0];
+    const dz = position[2] - rb.center[2];
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    const inner = rb.radius - rb.width / 2;
+    const outer = rb.radius + rb.width / 2;
+    return dist >= inner && dist <= outer;
+  });
 }
 
-// Get the nearest valid position if current position is invalid
+export function isValidPosition(position) {
+  return isOnRoad(position) || isInParkingLot(position) || isOnHighway(position) || isOnRoundabout(position);
+}
+
 export function getNearestValidPosition(position) {
   if (isValidPosition(position)) {
     return position;
   }
-  
+
   let nearestPos = position;
   let minDistance = Infinity;
-  
-  // Check all roads
+
+  const projectOntoRoad = (start, end, width) => {
+    const vx = end[0] - start[0];
+    const vz = end[2] - start[2];
+    const lenSq = vx * vx + vz * vz;
+    if (lenSq === 0) return null;
+
+    const px = position[0] - start[0];
+    const pz = position[2] - start[2];
+
+    let t = (px * vx + pz * vz) / lenSq;
+    if (t < 0) t = 0;
+    if (t > 1) t = 1;
+
+    const cx = start[0] + vx * t;
+    const cz = start[2] + vz * t;
+
+    let dx = position[0] - cx;
+    let dz = position[2] - cz;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    const halfW = width / 2;
+    if (dist > halfW && dist > 0) {
+      const scale = halfW / dist;
+      dx *= scale;
+      dz *= scale;
+    }
+
+    const candidate = [cx + dx, position[1], cz + dz];
+    const cd = Math.sqrt((candidate[0] - position[0]) ** 2 + (candidate[2] - position[2]) ** 2);
+    if (cd < minDistance) {
+      minDistance = cd;
+      nearestPos = candidate;
+    }
+  };
+
   roadLayout.roads.forEach(road => {
-    const roadGeom = createRoadGeometry(road);
-    const dx = position[0] - roadGeom.position[0];
-    const dz = position[2] - roadGeom.position[2];
-    const distance = Math.sqrt(dx * dx + dz * dz);
-    
-    if (distance < minDistance) {
-      minDistance = distance;
-      // Clamp to road bounds
-      const halfWidth = road.width / 2;
+    projectOntoRoad(road.start, road.end, road.width);
+  });
+
+  if (roadLayout.highway) {
+    const hw = roadLayout.highway;
+    const start = [hw.position[0] - hw.length/2, hw.position[1], hw.position[2]];
+    const end = [hw.position[0] + hw.length/2, hw.position[1], hw.position[2]];
+    projectOntoRoad(start, end, hw.width);
+  }
+
+  (roadLayout.roundabouts || []).forEach(rb => {
+    const dx = position[0] - rb.center[0];
+    const dz = position[2] - rb.center[2];
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    const inner = rb.radius - rb.width / 2;
+    const outer = rb.radius + rb.width / 2;
+    if (dist < minDistance) {
+      minDistance = dist;
+      const angle = Math.atan2(dz, dx);
+      const targetDist = Math.max(inner, Math.min(outer, dist));
       nearestPos = [
-        Math.max(Math.min(roadGeom.position[0], roadGeom.position[0] + halfWidth), roadGeom.position[0] - halfWidth),
+        rb.center[0] + Math.cos(angle) * targetDist,
         position[1],
-        Math.max(Math.min(roadGeom.position[2], roadGeom.position[2] + halfWidth), roadGeom.position[2] - halfWidth)
+        rb.center[2] + Math.sin(angle) * targetDist
       ];
     }
   });
-  
+
   return nearestPos;
+}
+
+export const roadBlockades = [
+  { position: [-47, 1, 25], size: [2, 2, 8], rotation: 0 },
+  { position: [47, 1, 25], size: [2, 2, 8], rotation: 0 },
+  { position: [-47, 1, 0], size: [2, 2, 8], rotation: 0 },
+  { position: [47, 1, 0], size: [2, 2, 8], rotation: 0 },
+  { position: [-47, 1, -25], size: [2, 2, 8], rotation: 0 },
+  { position: [47, 1, -25], size: [2, 2, 8], rotation: 0 },
+  { position: [-25, 1, 42], size: [8, 2, 2], rotation: 0 },
+  { position: [-25, 1, -42], size: [8, 2, 2], rotation: 0 },
+  { position: [0, 1, 42], size: [8, 2, 2], rotation: 0 },
+  { position: [0, 1, -42], size: [8, 2, 2], rotation: 0 },
+  { position: [25, 1, 42], size: [8, 2, 2], rotation: 0 },
+  { position: [25, 1, -42], size: [8, 2, 2], rotation: 0 },
+];
+
+export function isInRoadBlockade(position) {
+  return roadBlockades.some(b => {
+    const halfX = b.size[0] / 2;
+    const halfZ = b.size[2] / 2;
+    return (
+      position[0] >= b.position[0] - halfX &&
+      position[0] <= b.position[0] + halfX &&
+      position[2] >= b.position[2] - halfZ &&
+      position[2] <= b.position[2] + halfZ
+    );
+  });
 }

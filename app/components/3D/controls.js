@@ -9,15 +9,22 @@ export function useKeyboardControls(buttonControls = {}) {
     left: false,
     right: false,
     brake: false,
+    handbrake: false,
+    reset: false,
+    boost: false,
+    headlight: false
   });
 
-  // Merge keyboard and button controls
+  
   const combinedControls = {
     forward: keys.forward || buttonControls.forward,
     backward: keys.backward || buttonControls.backward,
     left: keys.left || buttonControls.left,
     right: keys.right || buttonControls.right,
     brake: keys.brake || buttonControls.brake,
+    handbrake: keys.handbrake || buttonControls.handbrake,
+    reset: keys.reset || buttonControls.reset,
+    boost: keys.boost || buttonControls.boost,
   };
 
   useEffect(() => {
@@ -44,6 +51,15 @@ export function useKeyboardControls(buttonControls = {}) {
           e.preventDefault();
           setKeys((k) => ({ ...k, brake: true }));
           break;
+        case 'shift':
+          setKeys((k) => ({ ...k, handbrake: true, boost: true }));
+          break;
+        case 'r':
+          setKeys((k) => ({ ...k, reset: true }));
+          break;
+        case 'h':
+          setKeys((k) => ({ ...k, headlight: !k.headlight }));
+          break;
       }
     };
 
@@ -68,6 +84,14 @@ export function useKeyboardControls(buttonControls = {}) {
           break;
         case ' ':
           setKeys((k) => ({ ...k, brake: false }));
+          break;
+        case 'shift':
+          setKeys((k) => ({ ...k, handbrake: false, boost: false }));
+          break;
+        case 'h':
+          break;
+        case 'r':
+          setKeys((k) => ({ ...k, reset: false }));
           break;
       }
     };
